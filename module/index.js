@@ -1,140 +1,99 @@
-var events = require('events');
-var eventsConfig = require("./config.js").events;
-var changeMaker = require("./changeMaker.js");
+var server_file = require('./changeMaker.js');
 var http = require('http');
 
-class Pizza{
-    constructor(){
-        this.price = 10;
-        this.product_name = "Pizza";
+
+
+const port = 8000;
+
+http.createServer((req,res) =>{
+    var acc = new server_file.Account();
+    var returnDict = []; // create an empty array
+
+    acc.on("foodAdded", server_file.logAddedItem);
+    acc.on("foodRemoved",server_file.logRemovedItem);
+    acc.on("error", server_file.error);
+
+    acc.addPizza();
+
+
+
+    acc.addPizza();
+    acc.addHamburger();
+    acc.addSalad();
+    acc.addPizza();
+    acc.addHamburger();
+    acc.addSalad();
+    acc.addPizza();
+    acc.addHamburger();
+    acc.addSalad();
+    acc.addPizza();
+    acc.addHamburger();         //10 items here
+    acc.addSalad();             //error here
+    acc.removeLastItem();       //item removed
+
+    acc.removeLastItem();
+    acc.removeLastItem();
+    // acc.removeAllItems();//empty the order
+
+
+    for (let i = 0;i < acc.logString.length;i++)
+    {
+        var temp  = (acc.logString[i]).split(" ");
+        switch (temp[1]){
+            case "added":
+            {
+                returnDict.push({
+                    key:   "Adding item",
+                    value: acc.logString[i]
+                });
+
+                break;
+
+            }
+            case "removed":
+            {
+                returnDict.push({
+                    key:   "Removing item",
+                    value: acc.logString[i]
+                });
+                break;
+
+            }
+            case "to":
+            {
+                returnDict.push({
+                    key:   "Error message",
+                    value: acc.logString[i]
+                });
+                break;
+
+            }
+            default:
+            {
+                returnDict.push({
+                    key:   "Error occurred!",
+                    value: "Unable to fetch log"
+                });
+                break;
+            }
+
+        }
+
+
     }
 
-}
+    returnDict.push({
+        key:   "All items:",
+        value: acc.printOrder()           //print order
+    });
 
-class Hamburger{
-    constructor(){
-        this.price = 16;
-        this.product_name = "Hamburger";
-    }
+    res.writeHeader(200,{'Content-Type': 'application/json'});
 
-}
+    res.write(JSON.stringify(returnDict));
+    res.end();
 
-class Salad{
-    constructor(){
-        this.price = 5;
-        this.product_name = "Salad";
-    }
-}
-
-class Account extends events.EventEmitter {
-    constructor() {
-        super();
-        this.maxConst = 12;
-        this.ordered = [this.maxConst];
-        this.totalPrice = 0;
-
-
-    }
-    addHamburger(){
-        let temp = new Hamburger();
-        if(this.ordered.length < this.maxConst) {
-            this.ordered.push(temp.product_name);
-            this.totalPrice += temp.price;
-            this.emit('foodAdded');
-        }
-        else{
-            this.emit('error');
-        }
-
-        return temp
-    }
-    addPizza(){
-        let temp = new Pizza();
-        if(this.ordered.length < this.maxConst) {
-            this.ordered.push(temp.product_name);
-            this.totalPrice += temp.price;
-            this.emit('foodAdded');
-        }
-        else{
-            this.emit('error');
-        }
-    }
-    addSalad(){
-        let temp = new Salad();
-        if(this.ordered.length < this.maxConst) {
-            this.ordered.push(temp.product_name);
-            this.totalPrice += temp.price;
-            this.emit('foodAdded');
-        }
-        else{
-            this.emit('error');
-        }
-    }
-    removeLastItem(){
-
-        if(this.ordered.length > 0){
-            this.emit('foodRemoved');
-            let x = this.ordered.pop();
-            this.totalPrice -= x.price;
-        }
-
-
-    }
-    printOrder(){
-        console.log("---------------------MyShop------------------------");
-        for (var i = 0;i < this.ordered.length; i++) {
-        console.log(this.ordered[i]);
-        }
-        console.log("---------------------------------------------------");
-        console.log("Total Price: " + this.totalPrice);
-        console.log("---------------------------------------------------");
-    };
-    removeAllItems(){
-        this.ordered = [];
-        this.totalPrice = 0;
-    };
-}
+}).listen(port);
+console.log('listening on port 8000');
 
 
 
-function logAddedItem() {
-    console.log(`Item added was : ${this.ordered[this.ordered.length-1]}`);
-}
-
-function logRemovedItem() {
-    console.log(`Item was removed : ${this.ordered[this.ordered.length-1]}`);
-}
-
-function error() {
-    console.log("Unable to add item, max reached")
-
-}
-
-module.exports = {
-    Account : Account,
-    logAddedItem: logAddedItem,
-    logRemovedItem:logRemovedItem,
-    error:error
-};
-
-
-// const port = 8000;
-//
-// http.createServer((req,res) =>{
-//
-//     console.log(process.cwd());
-//
-//     var urlObj = url.parse(req.url, true, false);
-//     fs.readFile(ROOT_DIR,(err,data) => {
-//         console.log(`searching at:${ROOT_DIR} ${urlObj.pathname}`);
-//         if(err) {
-//             res.writeHeader(404);
-//             res.end(JSON.stringify(err));
-//             return;
-//         }
-//         res.writeHeader(200,{'Content-Type': 'text/html'});
-//         res.write(data);
-//         res.end();
-//     });
-// }).listen(port);
-// console.log('listening on port 8000');
