@@ -1,7 +1,7 @@
 var events = require('events');
-var eventsConfig = require("./config.js").events;
-var changeMaker = require("./changeMaker.js");
-var http = require('http');
+// var eventsConfig = require("./config.js").events;
+// var changeMaker = require("./changeMaker.js");
+// var http = require('http');
 
 class Pizza{
     constructor(){
@@ -112,6 +112,8 @@ class Account extends events.EventEmitter {
     removeAllItems(){
         this.ordered = [];
         this.totalPrice = 0;
+        console.log("Everything was deleted!");
+        this.logString.push("Everything was deleted!");
     };
 }
 
